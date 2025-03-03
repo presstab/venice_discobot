@@ -1,5 +1,6 @@
 import os
 import discord
+import time
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -23,14 +24,20 @@ async def on_ready():
 @bot.command(name='ask')
 async def ask(ctx, *, question):
     """Ask a question to Venice AI"""
+    # Start timing the response
+    start_time = time.time()
+    
     await ctx.send(f"VeniceAI-{venice_api.model} is thinking...")
     
     try:
         # Get answer from Venice AI
         answer = await venice_api.get_answer(question)
         
+        # Calculate response time
+        response_time = time.time() - start_time
+        
         # Send the response for moderation
-        await post_response(ctx, question, answer, bot, venice_api.model)
+        await post_response(ctx, question, answer, bot, venice_api.model, response_time)
     except Exception as e:
         await ctx.send(f"Sorry, I encountered an error: {str(e)}")
 

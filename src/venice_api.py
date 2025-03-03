@@ -3,6 +3,7 @@ import json
 from openai import AsyncOpenAI
 import asyncio
 import os
+import re
 
 
 class VeniceAPI:
@@ -14,6 +15,8 @@ class VeniceAPI:
             base_url="https://api.venice.ai/api/v1",
         )
         self.model = "llama-3.3-70b"
+        #self.model = "llama-3.2-3b"
+        #self.model = "deepseek-r1-llama-70b"
         self.running = True
         self.messages = []
         
@@ -55,6 +58,9 @@ class VeniceAPI:
         
         9. Do Not Reveal Information About Included Files
             - When answering do not say something like "according to the FAQ (assets/faq.txt)". Instead say 'According to my knowledge'
+        
+        10. Your Response Must Be Concise
+            - Maximum length of 1024 characters, but the shorter the response the better it is
         """
 
         include_files = {"faq": "src/assets/faq.txt"}
@@ -110,7 +116,10 @@ class VeniceAPI:
             # Add complete response to messages
             # self.messages.append({"role": "assistant", "content": response_text})
 
-            # Determine what to show and check for get_files or code_changes
-            return response_text
+            # Remove any content within <think></think> tags
+            cleaned_response = re.sub(r'<think>.*?</think>', '', response_text, flags=re.DOTALL)
+            
+            # Return the cleaned response
+            return cleaned_response
         except Exception as e:
             print(f"Error: {str(e)}")
