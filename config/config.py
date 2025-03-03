@@ -15,4 +15,4 @@ else:
 
 # Venice API configuration
 VENICE_API_KEY = os.getenv('VENICE_API_KEY')
-VENICE_API_BASE_URL = os.getenv('VENICE_API_BASE_URL', 'https://api.venice.ai')
+VENICE_API_BASE_URL = os.getenv('VENICE_API_BASE_URL', 'https://api.venice.ai/api/v1')

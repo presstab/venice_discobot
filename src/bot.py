@@ -4,7 +4,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from venice_api import VeniceAPI
-from moderation import handle_moderation
+from moderation import post_response
 
 # Load environment variables
 load_dotenv()
@@ -23,14 +23,14 @@ async def on_ready():
 @bot.command(name='ask')
 async def ask(ctx, *, question):
     """Ask a question to Venice AI"""
-    await ctx.send(f"Thinking about: {question}")
+    await ctx.send(f"VeniceAI-{venice_api.model} is thinking...")
     
     try:
         # Get answer from Venice AI
         answer = await venice_api.get_answer(question)
         
         # Send the response for moderation
-        await handle_moderation(ctx, question, answer, bot)
+        await post_response(ctx, question, answer, bot, venice_api.model)
     except Exception as e:
         await ctx.send(f"Sorry, I encountered an error: {str(e)}")
 

@@ -1,0 +1,434 @@
+How do I prevent my chat history from being cleared by my browser?
+
+We've added a feature to help minimize data loss: Chat Persistence.
+
+To enable Chat Persistence:
+
+    Open the chat history drawer.
+    Select your profile at the bottom.
+    Open "Account Settings."
+    Look for the Chat Data section. You'll see the option to persist storage.
+
+Why do my unclaimed rewards disappear when I stake VVV?
+
+Your rewards aren’t lost – staking additional tokens automatically claims your pending rewards. You can verify this in your transaction history on BaseScan.
+
+Do my staking rewards expire?
+
+No, staking rewards for $VVV do not expire. When claiming your rewards, you will need a small amount of $ETH on Base to cover gas fees.
+
+How do I delete my account?
+
+    Go to your profile in the chat history drawer.
+    Select "Manage Account."
+    Select "Security."
+    Select "Delete Account" at the bottom of the page.
+
+Once an account is deleted it cannot be recovered.
+
+How long does my airdrop claim take?
+
+Airdrop results from Venice points may take up to 72 hours to process, while airdrops earned through crypto community involvement are available immediately.
+
+How do I upgrade to Pro and claim my airdrop?
+
+[No additional instructions provided in the text—presumably instructions appear in your account dashboard.]
+
+How long do my VVV tokens take to unstake?
+
+After unstaking, there is a 7-day cooldown period. During this period, you will not receive staking rewards. You can withdraw your stake at the end of the 7 days.
+
+How do I stake my VVV?
+
+[No direct instructions provided in the text—presumably instructions appear in your account dashboard or staking portal.]
+
+How do I claim my airdrop?
+
+[No direct instructions provided in the text—presumably instructions appear in your account dashboard or airdrop portal.]
+
+What is the Venice Incentive Fund?
+
+The Venice Incentive Fund is a pool of 10% of genesis tokens, controlled by Venice, used to support initiatives that advance the VVV ecosystem—such as incentivizing API partners, paying outside parties for projects and bounties, and other activities that benefit all token holders collectively. The fund cannot be used to pay or grant tokens to Venice team members. Its sole purpose is to drive growth and value for the entire token holder community.
+
+How do computing advancements affect VVV?
+
+As chips become more powerful and less expensive, Venice's inference capacity will rise, making VVV shielded from deflationary effects and benefiting from computing advancements.
+
+When does the airdrop claim expire?
+
+The airdrop claim expires 45 days from the launch of the VVV token (January 27, 2025). Expiration is March 13, 2025. After this date, all airdrop claims expire permanently.
+
+Who qualifies for the VVV user airdrop?
+
+There are two categories of airdrop recipients:
+
+    Venice Users
+        Your airdrop is based on the points you earned in the app, as of December 31, 2024.
+        If you had at least 25 points and were active in the app later than October 1, 2024, you received some portion of tokens (the more points you had, the higher the amount of VVV tokens).
+        While all users could accumulate points, if you wish to claim the airdrop, you must upgrade to be a Pro user.
+        25 million VVV tokens (25% of total supply) were allocated to Venice users.
+
+    Crypto Protocol Users
+        25 million VVV tokens (25% of total supply) were allocated for crypto and AI community protocols and developers, including VIRTUALS, AERO, DEGEN, AIXBT, GAME, LUNA, VADER, CLANKER, MOR, FOX, and roughly 200 registered Coinbase Agentkit Developers.
+        Snapshot date: December 31, 2024.
+
+You can check eligibility for the airdrop at the Venice token dashboard.
+
+What is the Venice Compute Unit (VCU)?
+
+The Venice Compute Unit (VCU) is a unified variable that measures Venice's current inference capacity available on its API per day. It standardizes the resource of inference across various models (text vs image, different model sizes, etc.). Think of it as a standardized unit of measurement for the computational power required to run different AI models. For example, 1 VCU might represent the power needed to run a simple text-based AI model, while 10 VCUs might represent the power required to run a more complex image-based model.
+
+How does my daily inference capacity change over time?
+
+As Venice builds out its infrastructure capacity, the total API capacity (measured in VCUs) tends to rise. This means that your daily inference capacity will increase over time, even if you don't stake more VVV tokens.
+
+How is my daily inference capacity determined?
+
+Your daily inference capacity is determined by the percentage of staked VVV tokens you hold. If you have 1% of the staked VVV tokens and the total API capacity is 10,000 VCUs, you would be entitled to 100 VCUs (1%) every day, without spending or losing your VVV.
+
+When are staking rewards paid out?
+
+Staking rewards accumulate continually, and you can withdraw them whenever you wish.
+
+How does VVV staking yield work?
+
+Staking yield is calculated based on the Utilization Rate, which measures the demand for Venice's API capacity. All emissions of the token (14 million VVV per year) are paid either to stakers or to Venice, based on this Utilization Rate. Staking yield is paid out to users as additional VVV tokens.
+
+Utilization Rate:
+This curve incentivizes Venice to keep the Utilization Rate close to 50%, making the network robust and adaptable to demand. If the rate falls toward zero, Venice’s incentive is to develop more demand for the API. If the rate rises toward 100%, Venice’s incentive is to build more capacity to bring the rate back toward the middle.
+
+What determines my inference capacity when staking VVV?
+
+Inference limits are calculated as a pro-rata share of Venice's growing total capacity, divided across all stakers. As Venice's compute capacity expands, the available inference for each staker increases proportionally.
+
+How does the Venice token (VVV) work and what are the benefits of staking it?
+
+Staking VVV tokens gives you access to a pro-rata portion of Venice's total inference capacity via the API on an ongoing basis. This capacity is measured in Venice Compute Units (VCUs). By staking VVV, you also benefit from ongoing access to inference at zero marginal cost, plus a yield paid to you. Essentially, AI agents and other API users can access inference capacity without typical per-request fees, while also earning yield on staked tokens.
+
+What are the tokenomics of the Venice token (VVV)?
+
+The VVV token has an initial supply of 100 million, allocated as follows:
+
+    50% to Venice users and the AI community via airdrop
+    35% to Venice.ai for development and growth
+    10% to an incentive fund to support ecosystem development
+    5% for liquidity provision
+
+Additionally, 14 million new VVV tokens are emitted annually and awarded to stakers, providing an ongoing incentive for network participation. Fundamental demand for the token comes from its utility: by staking VVV, a holder obtains access to private and uncensored AI inference at zero cost via the Venice API.
+
+Is the supply capped for the Venice token (VVV)?
+
+From an initial genesis supply of 100 million units, 14 million are created annually. The inflation rate starts at 14% and falls each year. Emissions continue to provide ongoing incentive for Venice to keep building the compute capacity of the inference network.
+
+What is the Contract Address for the Venice token (VVV)?
+
+0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf on the Base blockchain.
+
+You can use this address to view details (source code, transaction history, token balances) on a blockchain explorer like https://basescan.org/address/0xacfE6019Ed1A7Dc6f7B508C02d1b04ec88cC21bf.
+
+Where can I learn more about the Venice token (VVV)?
+
+    Read our official token launch announcement blog.
+    Join our community on Discord for updates: https://discord.gg/askvenice
+    Visit the Token section on our FAQ page for additional information.
+
+What is the Venice token (VVV)?
+
+VVV is a cryptocurrency token designed to reduce economic friction for AI agents and developers using the Venice API. By staking VVV tokens, users can access free, ongoing inference on the Venice API, avoiding traditional usage fees.
+
+How do I cancel my Pro subscription?
+
+You can cancel your subscription anytime, but subscriptions are not eligible for a refund. To cancel:
+
+    Open your chat history drawer and locate your username at the bottom.
+    Click on your username to access the "Account Info" page.
+    Click "Manage Subscription" to open the billing page.
+    Select "Cancel subscription" to complete the process.
+
+You’ll continue to receive Pro services until the end of your current subscription period.
+
+What is an abliterated model?
+
+An abliterated model is a modified version of a Large Language Model (LLM) that has undergone "abliteration," removing or suppressing certain restrictions and censorship mechanisms in the original model, resulting in a more uncensored and transparent AI.
+
+Read more here: https://huggingface.co/blog/mlabonne/abliteration
+
+How can I manage my conversation history and start new chats?
+
+We recommend starting new chats regularly to keep your conversation history manageable. This helps with organization, reduces clutter, and can improve performance. To start a new chat, click "New Chat." You can access previous conversations from the chat history drawer to continue where you left off.
+
+How long can my conversations be in Venice?
+
+Conversations are limited to 20,000 tokens (excluding file uploads) and 50 messages per conversation. This helps keep chats organized and ensures optimal performance.
+
+How do I generate the same person/face/subject in an image?
+
+Maintaining the same face on multiple AI-generated images can be tricky. Here's a workaround:
+
+    Craft a descriptive prompt with as many details about the face as possible.
+    Select the image icon to switch to image generation mode.
+    Click the gear icon to open image generation settings.
+    Under "Advanced Settings," locate the seed value field. Enter a numeric seed (e.g., 12345678).
+    Generate your first image.
+    To create variations with the same face, keep the same prompt and seed, but change the scene, pose, clothes, or background.
+
+To generate new variations, change the seed value and repeat.
+
+Why am I receiving censored responses?
+
+"Uncensored" in Venice means no extra restrictions beyond what's inherent in the base models. But no model is truly bias-free. Each has inherent limitations and biases from its training. Venice’s master system prompt encourages more openness. You can experiment with system prompts to guide the AI further.
+
+Why am I receiving errors when I've hit my inference limit, when I haven’t?
+
+If you share an IP with other users, the IP could hit the rate limits collectively. Try using mobile data instead of your shared internet connection to test.
+
+What are the context lengths for Venice models?
+
+    Llama 3.3 70B: 30k tokens
+    Llama 3.2 3B: 120k tokens
+    Llama 3.1 405B: 54k tokens
+    Dolphin 72B: 26k tokens
+    Qwen 2.5 Coder 32B: 30K tokens
+
+When does the prompt limit reset?
+
+The limit counter resets daily at 12:01 AM UTC.
+
+What does the Upscale feature do?
+
+Pro users can upscale any generated image to very high resolution (4x each dimension). For example, a 1024x1024 image becomes 4096x4096. Upscaling takes 15-45 seconds, and the large image will download to your device. Soon, Venice will allow upscaling of any uploaded image.
+
+Can I Upload Images to Venice?
+
+Not currently. Image upload is on our short-term roadmap.
+
+How do I manage my subscription or get receipts?
+
+Manage your subscription and obtain receipts within User Settings (accessed by clicking your user avatar).
+
+WalletConnect users: Why do I keep getting logged out of Venice?
+
+WalletConnect sets a 7-day timeout on all logged-in sessions. Venice users who log in with WalletConnect will be logged out every 7 days and must log in again. Sessions can be extended within your wallet settings. Contact your wallet provider with questions.
+
+Can you delete my data?
+
+All data about prompts and AI responses is stored locally in your browser. The only data Venice may have is your email and IP address. Please submit a request to DataPrivacy@venice.ai to delete this data. For more information on privacy, read our blog.
+
+How can I provide feedback or report issues?
+
+We value user feedback. Please email the team at support@venice.ai.
+
+How do I change my account password?
+
+    Visit https://venice.ai/sign-in.
+    Enter your email and click Continue.
+    On the next screen, click “Forgot password?”.
+    Click “Reset Password” and follow the instructions.
+
+How do I get account access with Morpheus / MOR?
+
+Important Update: As of January 1, 2025, holding MOR no longer provides Pro access.
+
+Future Plans: Morpheus may release a community rewards staking program in early 2025. Venice will consider enabling Pro access for a staked amount of MOR at that time.
+
+Learn more about Morpheus at https://mor.org
+
+Venice Referral Program - How does it work?
+
+Venice rewards users with Points for referring new subscribers. Share your unique referral link and receive Points when someone uses it to subscribe.
+
+    The referral is valid if the user signs up with your link, or converts from Free to Pro within 3 days of account creation.
+    Free wallet account referrals no longer qualify for rewards to prevent abuse.
+
+Rewards:
+
+    New Free User Reward: 50 points
+    New Pro User Reward: 1,000 points
+
+If a Free user subscribes via your link and upgrades to Pro within 3 days, you receive both rewards (up to 1,050 points).
+
+Pro users receive double referral Points.
+
+Your unique referral link is in your user settings. Venice reserves the right to remove points for referral abuse.
+
+How do I use my points? Can I share or trade my Points?
+
+Points have no current utility but let users track their usage. They may not be exchanged or traded between users, or transferred to another Venice account.
+
+How do I earn points?
+
+You earn points by using Venice. Pro users earn double Points.
+
+What are points and what are their value?
+
+Points are a digital reward with no monetary value, earned for specific activities on Venice. Points earned before December 31, 2024, determined airdrop allocations. Points do not currently have utility. Future utility ideas are being explored at https://featurebase.venice.ai
+
+How large of a document can Venice analyze?
+
+Venice can review documents with up to ~250,000 characters (text only). Venice cannot analyze images. If you receive an error, the file may exceed the threshold.
+
+How do I upload a PDF or TXT file?
+
+Venice can review PDF and TXT files, analyzing and summarizing their content. To upload:
+
+    Within the Chat function, click the paperclip to the left of the chat input field.
+    Upload your PDF or TXT file.
+    Once uploaded, type your instructions for the model into the chat.
+
+Currently, Venice supports PDFs with up to ~250,000 characters.
+
+I had a discussion with Venice on one device, and received a different answer on another. Why?
+
+Your conversation history lives locally in your device’s browser. Starting a conversation on a different device means Venice doesn’t have that prior context, so answers may differ.
+
+You can share an encrypted link to your text conversation. The share icon is located under each response in a text conversation. Clicking it generates a link to all the questions/responses above it. Anyone who opens that link can see and continue the conversation, but the new conversation history is stored in their browser. Shared links last for 14 days.
+
+What is God Mode? How do I use system Prompts?
+
+God Mode lets you amend system prompts in Venice, instructing the AI on how to interact. The system prompt tells the AI how you want it to behave. This can include specific speech styles, roles, or constraints. Customize system prompts in the chat settings menu (top-right corner > Chat Settings). The field for custom system prompts is at the top.
+
+How do I disable Safe Mode?
+
+Pro users can disable Safe Mode in image generation. In the image settings (top-right corner > Image Settings), the Safe Mode setting is near the bottom.
+
+How do I remove the Venice watermark on images?
+
+Pro users can remove the Venice watermark on generated images. In image settings (top-right corner > Image Settings), the watermark toggle is near the bottom.
+
+Can I delete my chat history?
+
+Yes. You can delete your chat history using the “Clear History” button in Settings. This history is only stored in your browser. Venice has no access to it.
+
+What should I do if the output seems completely wrong?
+
+If Venice returns an incorrect answer, try:
+
+    Switching to a different model.
+    Asking the query again with different wording.
+    Checking other sources, especially for critical questions.
+
+Open-source models have training cutoffs and might be unaware of recent data. The web-enabled models do better with time-dependent info.
+
+Some chat responses don't seem up to date?
+
+Venice's chat responses come from open-source LLM models published at certain points in time, lacking knowledge of events after those dates. The web-enabled models can provide more accurate, time-based answers.
+
+Are all the outputs accurate?
+
+Large Language Models are not truth machines. They can produce incorrect or offensive content. Always verify important information with other sources. Different models may respond differently due to their designs, training data, and context. Web-enabled models are more reliable for real-time info.
+
+Can I access my chat and image history across different browsers?
+
+No. Chat and image history is stored locally on each device's browser. However, you can share an encrypted link to text conversations. Image generation chats are not yet shareable.
+
+Can I share my text chat conversation?
+
+Yes. You can create an encrypted link to your text conversation (not yet available for image chats). There's a share icon under each response in a text conversation. Clicking it generates a link to all questions/responses above that point. The link is viewable for 14 days. Anyone with the link can continue the conversation from where you left off.
+
+Technical details:
+
+    Venice encrypts the conversation in the browser using TweetNaCl.js (XSalsa20 stream cipher and Poly1305).
+    Venice never sees the text or the decryption keys.
+    The encrypted conversation is stored on Venice servers for 2 weeks, then deleted.
+    Keys are only in the URL, never logged or stored by Venice.
+
+How do I save a chat conversation?
+
+Venice stores chat history locally in your browser. If you clear your cache, you’ll lose it. Venice does not keep a copy. You can export a conversation from the chat history drawer or manually copy/paste the text. You can also download generated images.
+
+Who can access my data and review my chat conversations?
+
+No one at Venice can see or save your text or image prompts/responses. They remain only in your local browser. Venice only stores your email and IP address on its servers. For more details, see our Privacy blog.
+
+What happens if I switch models in the middle of my conversation?
+
+Switching between chat and image models in the same conversation does not reset it. Your conversation continues until you start a new chat. Previous conversations remain in your browser’s history (in the drawer on the left).
+
+Web Enabled Models
+
+Llama 3.3 70B, Llama 3.1 405B, DeepSeek R1 70B, and DeepSeek R1 671B allow you to access the web for more accurate, relevant responses. Good for time-dependent info.
+
+Inference limits for web-enabled models:
+
+    Pro Users: 1,000 daily web-enabled chat inferences (within 10,000 total daily chat limit).
+    Free Users: 25 total chat inferences/day (including web-enabled).
+    Anonymous Users: 15 total chat inferences/day (including web-enabled).
+
+Context limits:
+
+    No Account & Free Users: 2,000 tokens (approx. 8,000 characters).
+    Pro Users: Larger context limits.
+
+All models are selectable from the model selection toggle (chat settings in the top-right corner).
+
+How do I switch to a different AI model?
+
+Use the model selector in the chat or image settings (top-right corner). Venice offers multiple open-source models, subject to change.
+
+What is the difference between the AI models on Venice?
+
+Venice provides multiple open-source AI models for text/chat, image generation, and code. Each has a different style, training data, and parameter size, so the results can vary.
+
+Text/Chat & Code Generation:
+
+    Dolphin 72B (Most Uncensored): Highly compliant with requests; strong instruction, conversation, and coding skills.
+    Llama 3.3 70B (Web Search): Advanced open-source LLM, strong in web search, content creation, conversational AI.
+    Llama 3.2 3B (Fastest): Lightweight, text-only, 3B parameters, very fast inference.
+    Qwen 2.5 Coder 32B (Best for Code): Focused on code generation, bug fixing, large training set.
+    Llama 3.1 405B (Most Intelligent): Very large open-source model, top-tier performance on standard LLM benchmarks.
+    DeepSeek R1 671B: Focused on advanced math/technical tasks, modular reasoning.
+    DeepSeek R1 70B: Distilled version of the 671B model, optimized for faster inference while retaining strong reasoning.
+
+Image Generation:
+
+    FLUX: Guidance-distilled, excellent prompt-following, high-quality images, but slightly slower.
+    FLUX Uncensored: Removes inherent censorship from FLUX, enabling NSFW image generation (controlled by the “Safe Venice” toggle).
+    Pony Realism: Highly detailed and realistic images (people, landscapes, still-life).
+    Lustify SDXL: Fine-tuned SDXL for detailed figurative art and photorealism.
+    Fluently XL v4: Improved aesthetics, lighting, contrast, realism. Default image model on Venice.
+    Stable Diffusion 3.5: From Stability AI; improved prompt adherence and quality, 1-megapixel resolution, flexible for different styles.
+
+Where do you save my personal information and conversation data?
+
+Venice only collects email and IP address. All prompts and content are stored in your local browser, never on Venice servers. Venice uses:
+
+    Clerk for authentication (login credentials, email, cookies).
+    Customer.io to communicate with customers (event tracking, email).
+
+Both platforms use cookies. Venice uses local browser storage, which can be cleared at any time. For details, see our Privacy Blog, Privacy Policy, and Terms of Use.
+
+Is there a limit to how much I can use Venice?
+
+Yes. Venice has three user tiers:
+
+    No Account: 15 text prompts/day and 5 image prompts/day.
+    Free Account: 25 text prompts/day and 15 image prompts/day.
+    Pro Account: Unlimited text prompts and 1,000 image prompts/day.
+
+These limits can change. Also, No Account & Free Users have a 2,000-token max context per chat (~8,000 characters). Pro users have larger context limits.
+
+What languages are supported?
+
+Venice enables switching between multiple LLM models. Language support depends on each model's training.
+
+How do I install Venice on my phone or tablet?
+
+Apple iOS
+
+    Use Safari to open venice.ai.
+    Tap the “Share” icon.
+    Select “Add to Home Screen.”
+    Tap “Add.”
+
+Android
+
+    Open Chrome and go to venice.ai.
+    Tap the three dots (settings) and select “Install app.”
+    Tap “Add to home screen.”
+
+How is Venice different from ChatGPT, Claude, or other AI services?
+
+    Permissionless: Anyone, anywhere, can access open-source machine intelligence.
+    Privacy: Venice doesn’t record your prompts or AI responses. It only stores your email and IP address.
+    Uncensored: Venice remains neutral, imposing no extra censorship beyond the base models. There is a “Safe Venice” mode for NSFW, which Pro users can turn off.
+    Open-Source: All AI models are open-source, with transparent weights/designs. Centralized AI providers cannot provide this level of transparency.
