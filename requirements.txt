@@ -1,0 +1,7 @@
+discord.py
+python-dotenv
+openai
+aiohttp
+requests
+beautifulsoup4
+ftpy
