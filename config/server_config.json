@@ -1,0 +1,13 @@
+{
+    "1329838107692105769": {
+        "command_prefix": "!",
+        "bot_name": "VeniceAI",
+        "discord_topic": "Venice AI",
+        "answer_style": "embedded",
+        "model": "llama-3.3-70b",
+        "context_file": "src/assets/faq_venice.json",
+        "faq_url": "https://venice.ai/faqs",
+        "faq_start_phrase": "How do I prevent my chat",
+        "faq_end_phrase": "AI companies can’t and won’t."
+    }
+}

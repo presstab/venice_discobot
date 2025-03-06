@@ -24,20 +24,26 @@ def test_venice_api():
     
     # Create an instance of VeniceAPI
     venice_api = VeniceAPI(api_key)
-    
+    venice_api.model = "llama-3.3-70b"
+    #venice_api.model = "deepseek-r1-671b"
+    #venice_api.model = "dolphin-2.9.2-qwen2-72b:enable_web_search=off"
+
     # Define the question
     question = "do my rewards from staking have to be claimed within a certain period?"
 
     # Run the async function to get an answer
-    answer = asyncio.run(venice_api.get_answer(question))
+    answer = asyncio.run(venice_api.get_answer(question, topic="Venice AI"))
     
     # Print the answer
     print(f"Question: {question}")
-    print(f"Answer: {answer}")
-    
+    print(f"Answer: {answer['answer']}")
+    for citation in answer['citations']:
+        print(citation['url'])
+
     # Verify that we got a non-empty response
     assert answer, "No answer was returned from the API"
     print("Test completed successfully!")
+
 
 if __name__ == "__main__":
     test_venice_api()
