@@ -72,6 +72,20 @@ venice_api = VeniceAPI(api_key=VENICE_API_KEY)
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
 
+@bot.command(name="nick")
+async def set_nickname(ctx, new_name: str):
+    """Manually change the bot's nickname"""
+    if not ctx.author.guild_permissions.administrator:
+        await ctx.send("You need administrator to change config nick.")
+        return
+    try:
+        await ctx.guild.me.edit(nick=new_name)
+        await ctx.send(f"Nickname changed to {new_name} ✅")
+    except discord.Forbidden:
+        await ctx.send("I don't have permission to change my nickname ❌")
+    except discord.HTTPException:
+        await ctx.send("Failed to change nickname due to an API error ❌")
+
 
 @bot.command(name='ask')
 async def ask(ctx, *, question):
