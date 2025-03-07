@@ -1,13 +1,24 @@
 {
+    "1318981892061794375": {
+        "command_prefix": "!",
+        "bot_name": "VeniceAI",
+        "discord_topic": "VeniceFAQ AI",
+        "answer_style": "embedded",
+        "model": "llama-3.3-70b",
+        "context_file": "",
+        "faq_url": "https://venice.ai/faqs",
+        "faq_start_phrase": "How do I enable Voice Mode",
+        "faq_end_phrase": "AI companies can't and won't."
+    },
     "1329838107692105769": {
         "command_prefix": "!",
         "bot_name": "VeniceAI",
-        "discord_topic": "Venice AI",
+        "discord_topic": "VeniceFAQ AI",
         "answer_style": "embedded",
-        "model": "llama-3.3-70b",
-        "context_file": "src/assets/faq_venice.json",
+        "model": "dolphin-2.9.2-qwen2-72b",
+        "context_file": "",
         "faq_url": "https://venice.ai/faqs",
-        "faq_start_phrase": "How do I prevent my chat",
-        "faq_end_phrase": "AI companies can’t and won’t."
+        "faq_start_phrase": "How do I enable Voice Mode",
+        "faq_end_phrase": "AI companies can't and won't."
     }
 }

@@ -82,29 +82,57 @@ async def ask(ctx, *, question):
     # Start timing the response
     start_time = time.time()
     
-    # Get bot name and model from config
-    bot_name = server_config["bot_name"]
-    model = server_config["model"]
-    
-    await ctx.send(f"{bot_name}-{model} is thinking...")
-    
     try:
+        # Get bot name and model from config - validate types
+        bot_name = server_config.get("bot_name", "VeniceAI")
+        model = server_config.get("model")
+        
+        # Validate critical config values
+        if not isinstance(bot_name, str):
+            await ctx.send(f"Configuration error: bot_name must be a string, got {type(bot_name).__name__}")
+            return
+            
+        if not isinstance(model, str):
+            await ctx.send(f"Configuration error: model must be a string, got {type(model).__name__}")
+            return
+        
+        await ctx.send(f"{bot_name}-{model} is thinking...")
+        
         # Set the model from server config
         venice_api.model = model
         
-        # Get context file if configured
-        context_file = server_config["context_file"]
+        # Get context file if configured - validate type
+        context_file = server_config.get("context_file")
+        context = None
         if context_file:
+            if not isinstance(context_file, str):
+                await ctx.send(f"Configuration error: context_file must be a string path, got {type(context_file).__name__}")
+                return
+                
             try:
                 with open(context_file, 'r') as f:
                     context = f.read()
             except Exception as e:
+                await ctx.send(f"Error reading context file: {context_file}")
                 print(f"Error reading context file: {e}")
+                return
 
-        faq_url = server_config["faq_url"]
-        cutoff_before_phrase = server_config["faq_start_phrase"]
-        cutoff_after_phrase = server_config["faq_end_phrase"]
-        topic = server_config["discord_topic"]
+        # Get and validate other config values
+        faq_url = server_config.get("faq_url", "")
+        cutoff_before_phrase = server_config.get("faq_start_phrase", "")
+        cutoff_after_phrase = server_config.get("faq_end_phrase", "")
+        topic = server_config.get("discord_topic", "VeniceFAQ")
+        
+        # Type validation for string parameters
+        for name, value in [
+            ("faq_url", faq_url),
+            ("faq_start_phrase", cutoff_before_phrase),
+            ("faq_end_phrase", cutoff_after_phrase),
+            ("discord_topic", topic)
+        ]:
+            if not isinstance(value, str):
+                await ctx.send(f"Configuration error: {name} must be a string, got {type(value).__name__}")
+                return
 
         # Get live website faq
         additional_context = await scrape_venice_faq(faq_url, cutoff_before_phrase, cutoff_after_phrase)
@@ -116,13 +144,17 @@ async def ask(ctx, *, question):
         response_time = time.time() - start_time
         
         # Send the response based on answer style configuration
-        if server_config["answer_style"] == "embedded":
+        answer_style = server_config.get("answer_style", "embedded")
+        if not isinstance(answer_style, str):
+            answer_style = "embedded"  # Default if invalid
+            
+        if answer_style == "embedded":
             await post_response(ctx, question, answer, bot, server_config, response_time)
         else:  # plain text response
             await ctx.send(f"**Question:** {question}\n\n{answer['answer']}\n\n*Response time: {response_time:.2f}s*")
     except Exception as e:
-        await ctx.send(f"Request failed.")
-        print(e)
+        await ctx.send(f"Request failed. Check your server configuration.")
+        print(f"Error processing request: {e}")
 
 
 @bot.command(name='config')
@@ -141,7 +173,12 @@ async def config_command(ctx, setting=None, *, value=None):
     if setting is None:
         config_message = "**Server Configuration:**\n"
         for key, val in server_config.items():
-            config_message += f"• **{key}**: `{val}`\n"
+            # Handle empty string values specially to make them visible
+            if val == "":
+                display_val = "none"
+            else:
+                display_val = val
+            config_message += f"• **{key}**: `{display_val}`\n"
         await ctx.send(config_message)
         return
     
@@ -152,17 +189,27 @@ async def config_command(ctx, setting=None, *, value=None):
     
     # If no value provided, show current setting
     if value is None:
-        await ctx.send(f"**{setting}** is currently set to: `{server_config[setting]}`")
+        display_val = server_config[setting]
+        if display_val == "":
+            display_val = "none"
+        await ctx.send(f"**{setting}** is currently set to: `{display_val}`")
         return
     
     # Update the setting
-    # Convert boolean strings to actual booleans
+    # Convert string values to appropriate types based on setting
     if value.lower() == "true":
         value = True
     elif value.lower() == "false":
         value = False
     elif value.lower() == "none":
         value = None
+    
+    # Handle numeric values (important for our intentionally invalid config)
+    try:
+        if value and value.isdigit():
+            value = int(value)
+    except (AttributeError, ValueError):
+        pass
         
     # Update the configuration
     update_server_config(ctx.guild.id, {setting: value})

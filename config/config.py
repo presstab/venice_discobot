@@ -6,14 +6,17 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Default configurations
+# Default configuration for a single server - intentionally invalid
 DEFAULT_CONFIG = {
     "command_prefix": "!",
     "bot_name": "VeniceAI",
-    "answer_style": "embedded",  # or "plain"
-    "model": "llama3-70b-8192",  # Default model
-    "context_file": "src/assets/faq.txt",  # Default context file
-    "scrape_file": "src/assets/venice_faq.json"  # Default scrape file location
+    "discord_topic": "VeniceFAQ AI",
+    "answer_style": "embedded",
+    "model": None,  # Invalid: None instead of string
+    "context_file": 404,  # Invalid: number instead of string path
+    "faq_url": "",  # Invalid: empty URL
+    "faq_start_phrase": False,  # Invalid: boolean instead of string
+    "faq_end_phrase": {}  # Invalid: empty dict instead of string
 }
 
 # Discord configuration
