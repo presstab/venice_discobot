@@ -18,7 +18,7 @@ class VeniceAPI:
         self.running = True
         self.messages = []
         
-    async def get_answer(self, question, topic, context_file=None, raw_context=None):
+    async def get_answer(self, question, topic, context_file=None, raw_context=None, additional_dev_prompt=None):
         """
         Queries the Venice AI API to get an answer based on website information
         
@@ -65,7 +65,10 @@ class VeniceAPI:
             - When answering do not say something like "according to the FAQ (assets/faq.txt)". Instead say 'According to my knowledge'
         
         10. Your Response Must Be Concise
-            - Maximum length of 1024 characters, but the shorter the response the better it is
+            - Maximum length of 1024 characters, for simple questions it is preferred to keep the answer on the short side.
+        
+        For this specific response, please heavily consider the following:    
+        {additional_dev_prompt}
         """
 
         # Use provided context or load from default files

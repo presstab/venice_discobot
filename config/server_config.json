@@ -15,7 +15,7 @@
         "bot_name": "VeniceAI",
         "discord_topic": "VeniceFAQ AI",
         "answer_style": "embedded",
-        "model": "dolphin-2.9.2-qwen2-72b",
+        "model": "llama-3.3-70b",
         "context_file": "",
         "faq_url": "https://venice.ai/faqs",
         "faq_start_phrase": "How do I enable Voice Mode",
