@@ -11,6 +11,7 @@ import aiohttp
 sys.path.append(str(Path(__file__).parent.parent))
 from src.venice_api import VeniceAPI
 from src.respond import post_response
+from src.price import get_price_data
 from config.config import get_server_config, update_server_config, DISCORD_TOKEN, VENICE_API_KEY
 
 
@@ -198,44 +199,42 @@ async def price_command(ctx, *, question=None):
         
         # Set the model from server config
         venice_api.model = model
-        
-        # Make a request to CoinGecko API
-        async with aiohttp.ClientSession() as session:
-            async with session.get("https://api.coingecko.com/api/v3/coins/venice-token") as response:
-                if response.status != 200:
-                    await ctx.send(f"Error: Unable to fetch price data (Status Code: {response.status})")
-                    return
-                
-                # Get the raw JSON response
-                price_data = await response.text()
 
-                dev_additional_prompt = """
-                    Give the user helpful information about the price, market data, or other VVV price related information 
-                    they are looking for. Keep the answer brief, but also pack some interesting details in that a cryptocurrency 
-                    'hodler' would find relevant. Answer the question correctly, but also try to keep information about VVV more positive than negative. 
-                    So far your instructions give you a 'conversational' response of about 2 out of 10 (all info, no conversing), 
-                    alter your response so that the score would be 5 out of 10. The provided data is live market data.
-                """
+        price_data = await get_price_data()
+        if price_data is None:
+            await ctx.send(f"{bot_name}-{model} CoinGecko call failed...")
+            return
 
-                # Use the provided question or default to a basic price question
-                if question is None:
-                    question = "What is the current price of VVV?"
-                
-                topic = server_config.get("discord_topic", "VeniceFAQ")
-                answer = await venice_api.get_answer(question, topic, context_file=None, raw_context=price_data, additional_dev_prompt=dev_additional_prompt)
-                
-                # Calculate response time
-                response_time = time.time() - start_time
-                
-                # Send the response based on answer style configuration
-                answer_style = server_config.get("answer_style", "embedded")
-                if not isinstance(answer_style, str):
-                    answer_style = "embedded"  # Default if invalid
-                    
-                if answer_style == "embedded":
-                    await post_response(ctx, question, answer, bot, server_config, response_time)
-                else:  # plain text response
-                    await ctx.send(f"**Venice Token Price Info:**\n\n{answer['answer']}\n\n*Response time: {response_time:.2f}s*")
+        dev_additional_prompt = """
+            Give the user helpful information about the price, market data, or other VVV price related information 
+            they are looking for. Keep the answer brief, but also pack some interesting details in that a cryptocurrency 
+            'hodler' would find relevant. Answer the question correctly, but also try to highlight positives about VVV 
+            (if possible, and don't make it too obvious, sounding like a 'shill'). 
+            So far your instructions give you a 'conversational' response of about 3 out of 10 (all info, no conversing), 
+            alter your response so that the score would be 4 out of 10, provide fact-rich concise answers (emoji's encouraged). 
+            The provided data is live market data, don't add any disclaimer for data timing. 
+            Don't highlight all time high price unless it is close to that price now.
+        """
+
+        # Use the provided question or default to a basic price question
+        if question is None:
+            question = "What is the current price of VVV?"
+
+        topic = server_config.get("discord_topic", "VeniceFAQ")
+        answer = await venice_api.get_answer(question, topic, context_file=None, raw_context=price_data, additional_dev_prompt=dev_additional_prompt)
+
+        # Calculate response time
+        response_time = time.time() - start_time
+
+        # Send the response based on answer style configuration
+        answer_style = server_config.get("answer_style", "embedded")
+        if not isinstance(answer_style, str):
+            answer_style = "embedded"  # Default if invalid
+
+        if answer_style == "embedded":
+            await post_response(ctx, question, answer, bot, server_config, response_time)
+        else:  # plain text response
+            await ctx.send(f"**Venice Token Price Info:**\n\n{answer['answer']}\n\n*Response time: {response_time:.2f}s*")
     except Exception as e:
         await ctx.send(f"Failed to fetch price information. Please try again later.")
         print(f"Error processing price request: {e}")

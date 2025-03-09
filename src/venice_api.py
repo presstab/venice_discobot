@@ -67,6 +67,9 @@ class VeniceAPI:
         10. Your Response Must Be Concise
             - Maximum length of 1024 characters, for simple questions it is preferred to keep the answer on the short side.
         
+        10. Never Give Financial Advice or Recommendations on Buying or Selling
+            - If someone asks if they should buy or sell token or asset, respond that you can only provide factual information and cannot give advice.
+        
         For this specific response, please heavily consider the following:    
         {additional_dev_prompt}
         """
