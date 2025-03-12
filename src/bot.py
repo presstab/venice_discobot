@@ -7,6 +7,9 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import aiohttp
+import re
+import json
+
 # Add parent directory to path to allow importing from config
 sys.path.append(str(Path(__file__).parent.parent))
 from src.venice_api import VeniceAPI
@@ -30,24 +33,20 @@ async def scrape_venice_faq(url, cutoff_before_phrase="", cutoff_after_phrase=""
             html = await response.text()
             soup = BeautifulSoup(html, "html.parser")
 
-            for script in soup(["script", "style"]):
-                script.decompose()
+            # Find and store the desired script content before removing scripts
+            desired_script = soup.find("script", text=lambda t: t and "Frequently Asked Questions" in t)
+            if desired_script:
+                faq_content = desired_script.get_text()
+                # Assume faq_content is the string you extracted
+                # This regex finds the first JSON-like block (from the first '{' to the last '}')
+                json_match = re.search(r'({.*})', faq_content, re.DOTALL)
 
-            text = soup.get_text(separator="\n", strip=True)
+                if json_match:
+                    json_str = json_match.group(1)
+                    cleaned_json_str = json_str.replace('\\"', '"')
+                    return cleaned_json_str
 
-            #cut out anything before the phrase match
-            if cutoff_before_phrase != "":
-                index = text.find(cutoff_before_phrase)
-                if index != -1:
-                    text = text[index:]
-
-            #cut out anything after the phrase match
-            if cutoff_after_phrase != "":
-                index = text.find(cutoff_after_phrase)
-                if index != -1:
-                    text = text[:index + len(cutoff_after_phrase)]
-
-            return text
+            return None
 
 # Load environment variables
 load_dotenv()
