@@ -54,7 +54,7 @@ def load_server_configs():
 def save_server_configs(configs):
     """Save server configurations to JSON file"""
     with open(CONFIG_FILE_PATH, 'w') as config_file:
-        json.dump(configs, indent=4, fp=config_file)
+        json.dump(configs, indent=4, fp=config_file, sort_keys=True)
 
 
 def get_server_config(server_id):
@@ -62,10 +62,11 @@ def get_server_config(server_id):
     server_id = str(server_id)  # Convert to string to use as dict key
     configs = load_server_configs()
     
-    # If this server doesn't have a config, create one with defaults
+    # If this server doesn't have a config, return a copy of DEFAULT_CONFIG
+    # but don't save it to the config file
     if server_id not in configs:
-        configs[server_id] = DEFAULT_CONFIG.copy()
-        save_server_configs(configs)
+        # Just return a copy of the default config without saving it
+        return DEFAULT_CONFIG.copy()
     
     return configs[server_id]
 
@@ -74,12 +75,16 @@ def update_server_config(server_id, config_updates):
     server_id = str(server_id)  # Convert to string to use as dict key
     configs = load_server_configs()
     
-    # Create entry if it doesn't exist
+    # Create entry with an empty dict if it doesn't exist
+    # This ensures we only save explicitly set values, not the DEFAULT_CONFIG
     if server_id not in configs:
-        configs[server_id] = DEFAULT_CONFIG.copy()
+        configs[server_id] = {}
     
     # Update with new values
     configs[server_id].update(config_updates)
     save_server_configs(configs)
     
-    return configs[server_id]
+    # Return the updated config, filling in any missing values from DEFAULT_CONFIG
+    result = DEFAULT_CONFIG.copy()
+    result.update(configs[server_id])
+    return result

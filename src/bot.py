@@ -2,6 +2,7 @@ import os
 import discord
 import time
 import sys
+import json
 from pathlib import Path
 from discord.ext import commands
 from discord.ext import tasks
@@ -58,11 +59,9 @@ async def on_ready():
     # Initialize data_augmenter if not already initialized
     global data_augmenter
     if data_augmenter is None:
-        # Get server config from the first guild the bot is in (fallback)
-        if bot.guilds:
-            server_config = get_server_config(bot.guilds[0].id)
-            scrape_list = server_config.get("scrape_list", [])
-            data_augmenter = DataAugmenter(scrape_list)
+        # Initialize with empty scrape list - will be populated when first needed
+        data_augmenter = DataAugmenter([])
+        print("Initialized DataAugmenter with empty scrape list")
     
     # Start the automatic refresh timer
     refresh_data_timer.start()
@@ -187,14 +186,14 @@ async def price_command(ctx, *, question=None):
             await ctx.send(f"Configuration error: model must be a string, got {type(model).__name__}")
             return
         
-        await ctx.send(f"{bot_name}-{model} is checking CoinGecko for data...")
+        await ctx.send(f"{bot_name}-{model} is browsing for the latest price data...")
         
         # Set the model from server config
         venice_api.model = model
 
         price_data = await get_price_data()
         if price_data is None:
-            await ctx.send(f"{bot_name}-{model} CoinGecko call failed...")
+            await ctx.send(f"{bot_name}-{model} API call failed...")
             return
 
         dev_additional_prompt = """
@@ -234,11 +233,15 @@ async def price_command(ctx, *, question=None):
 @bot.command(name='config')
 async def config_command(ctx, setting=None, *, value=None):
     """View or modify server configuration"""
-    # Check if user has permission to change settings
-    if setting is not None and value is not None:
-        if not ctx.author.guild_permissions.administrator:
-            await ctx.send("You need administrator permissions to change config settings.")
-            return
+    # Check if user has permission for ALL config operations (viewing and changing)
+    if not (ctx.author.guild_permissions.administrator or ctx.author.guild_permissions.moderate_members):
+        await ctx.send("You need moderator or administrator permissions to view or change config settings.")
+        return
+    
+    # Additional check for making changes (require administrator)
+    if setting is not None and value is not None and not ctx.author.guild_permissions.administrator:
+        await ctx.send("You need administrator permissions to change config settings. Moderators can only view settings.")
+        return
     
     # Get current server configuration
     server_config = get_server_config(ctx.guild.id)
@@ -294,6 +297,142 @@ async def config_command(ctx, setting=None, *, value=None):
         data_augmenter = None
     
     await ctx.send(f"Updated **{setting}** to: `{value}`")
+
+
+def get_custom_context():
+    """Helper function to load custom context data"""
+    custom_context_path = "config/custom_context.json"
+    try:
+        with open(custom_context_path, "r") as f:
+            data = json.load(f)
+        # Ensure the expected structure exists
+        if "context_list" not in data or not isinstance(data["context_list"], list):
+            data = {"context_list": []}
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Create a new file with default structure if it doesn't exist or is invalid
+        data = {"context_list": []}
+    
+    return data
+
+
+def save_custom_context(data):
+    """Helper function to save custom context data"""
+    custom_context_path = "config/custom_context.json"
+    with open(custom_context_path, "w") as f:
+        json.dump(data, f, indent=4)
+
+
+@bot.command(name='add')
+async def add_context(ctx, *, message):
+    """Add a custom context message to the bot's knowledge base"""
+    # Check for moderator or administrator permissions
+    if not (ctx.author.guild_permissions.administrator or ctx.author.guild_permissions.moderate_members):
+        await ctx.send("You need moderator or administrator permissions to add context messages.")
+        return
+    
+    # Validate the message
+    if not message or len(message) < 2:
+        await ctx.send("Message is too short. Please provide a meaningful context message.")
+        return
+    
+    # Limit message size to prevent abuse (2000 is Discord's own message limit)
+    max_msg_length = 500  # Reasonable size for a context item
+    if len(message) > max_msg_length:
+        await ctx.send(f"Message is too long. Please keep it under {max_msg_length} characters.")
+        return
+    
+    # Sanitize input - we won't strip all HTML, but we'll prevent the most common issues
+    # This is a basic sanitization - more complex validation could be added
+    message = message.replace("<", "&lt;").replace(">", "&gt;")
+    
+    try:
+        # Read the current custom context file
+        data = get_custom_context()
+        
+        # Check for duplicate entries
+        if message in data["context_list"]:
+            await ctx.send("This message already exists in the context database.")
+            return
+        
+        # Add the new message to context_list
+        data["context_list"].append(message)
+        
+        # Limit total number of items to prevent file size abuse
+        max_items = 100
+        if len(data["context_list"]) > max_items:
+            data["context_list"] = data["context_list"][-max_items:]  # Keep only the most recent items
+        
+        # Write back to the file with pretty formatting
+        save_custom_context(data)
+        
+        # Refresh the data augmenter to include the new context
+        global data_augmenter
+        if data_augmenter is not None:
+            await data_augmenter.refresh()
+        
+        await ctx.send(f"Context message added successfully! Current context has {len(data['context_list'])} items.")
+    except Exception as e:
+        await ctx.send(f"Error adding context message: {str(e)}")
+        print(f"Error adding context message: {e}")
+
+
+@bot.command(name='context')
+async def list_context(ctx, delete_index: int = None):
+    """List all custom context items or delete an item by index"""
+    # Check for moderator or administrator permissions for ALL context operations
+    if not (ctx.author.guild_permissions.administrator or ctx.author.guild_permissions.moderate_members):
+        await ctx.send("You need moderator or administrator permissions to view or manage context items.")
+        return
+    
+    try:
+        data = get_custom_context()
+        context_list = data["context_list"]
+        
+        # Handle delete operation if index is provided
+        if delete_index is not None:
+            # Convert to zero-based index
+            delete_index = int(delete_index) - 1
+            
+            if delete_index < 0 or delete_index >= len(context_list):
+                await ctx.send(f"Invalid index. Please use a number between 1 and {len(context_list)}.")
+                return
+            
+            removed_item = context_list.pop(delete_index)
+            save_custom_context(data)
+            
+            # Refresh the data augmenter to exclude the deleted context
+            global data_augmenter
+            if data_augmenter is not None:
+                await data_augmenter.refresh()
+                
+            await ctx.send(f"Removed context item: \"{removed_item}\"")
+            return
+        
+        # List all items
+        if not context_list:
+            await ctx.send("No custom context items found.")
+            return
+        
+        # Format output with numbered list
+        response = "**Custom Context Items:**\n"
+        for i, item in enumerate(context_list, 1):
+            # Truncate long items in the listing
+            display_item = item
+            if len(display_item) > 100:
+                display_item = display_item[:97] + "..."
+            response += f"{i}. {display_item}\n"
+            
+            # Send in multiple messages if too long for Discord's limit
+            if len(response) > 1900:
+                await ctx.send(response)
+                response = ""
+        
+        if response:
+            await ctx.send(response)
+            
+    except Exception as e:
+        await ctx.send(f"Error processing context: {str(e)}")
+        print(f"Error with context command: {e}")
 
 
 @bot.command(name='refresh_data')
