@@ -68,6 +68,65 @@ async def scrape_venice_faq(url, cutoff_before_phrase="", cutoff_after_phrase=""
 
             return text
 
+async def get_url(url):
+    headers = {"User-Agent": "Mozilla/5.0"}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            if response.status != 200:
+                print(f"Error: Unable to fetch page (Status Code: {response.status})\n -- URL: {url}")
+                return None
+
+            return await response.text()
+
+async def scrape_api_docs():
+    dotenv.load_dotenv()
+
+    # Get API key from environment variables
+    api_key = os.getenv("VENICE_API_KEY")
+
+    if not api_key:
+        raise EnvironmentError("VENICE_API_KEY not found in .env file")
+
+    url_list = [
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/ai-agents.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/generating-api-key-agent.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/generating-api-key.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/integrations.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/postman.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/structured-responses.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/about-venice.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/getting-started.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/pricing.mdx",
+        "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/privacy.mdx",
+        "https://api.venice.ai/doc/api/swagger.yaml"
+    ]
+
+
+    augment_text = ""
+    for url in url_list:
+        response = await get_url(url)
+        if response is not None:
+            augment_text += response
+
+    venice_api = VeniceAPI(api_key)
+    venice_api.model = "llama-3.3-70b"
+
+    # Define the question
+    question = "is the koroko voice function updated in the api somewhere? I can't find how to callit in the docs. or postman"
+
+    # Run the async function to get an answer
+    answer = await venice_api.get_answer(question, topic="Venice AI", context_file=None, raw_context=augment_text)
+
+    # Print the answer
+    print(f"Question: {question}")
+    print(f"Answer: {answer['answer']}")
+    for citation in answer['citations']:
+        print(citation['url'])
+
+    # Verify that we got a non-empty response
+    assert answer, "No answer was returned from the API"
+    print("Test completed successfully!")
+
 
 async def test_price():
     price_data = await get_price_data()
@@ -113,4 +172,4 @@ async def test_venice_api():
 
 
 if __name__ == "__main__":
-    asyncio.run(test_venice_api())
+    asyncio.run(scrape_api_docs())

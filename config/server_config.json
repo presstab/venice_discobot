@@ -7,8 +7,19 @@
         "model": "llama-3.3-70b",
         "context_file": "",
         "faq_url": "https://venice.ai/faqs",
-        "faq_start_phrase": "How do I enable Voice Mode",
-        "faq_end_phrase": "AI companies can't and won't."
+        "scrape_list" : [
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/ai-agents.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/generating-api-key-agent.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/generating-api-key.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/integrations.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/postman.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/structured-responses.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/about-venice.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/getting-started.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/pricing.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/privacy.mdx",
+            "https://api.venice.ai/doc/api/swagger.yaml"
+        ]
     },
     "1329838107692105769": {
         "command_prefix": "!",
@@ -18,7 +29,18 @@
         "model": "llama-3.3-70b",
         "context_file": "",
         "faq_url": "https://venice.ai/faqs",
-        "faq_start_phrase": "How do I enable Voice Mode",
-        "faq_end_phrase": "AI companies can't and won't."
+        "scrape_list" : [
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/ai-agents.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/generating-api-key-agent.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/generating-api-key.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/integrations.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/postman.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/guides/structured-responses.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/about-venice.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/getting-started.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/pricing.mdx",
+            "https://raw.githubusercontent.com/veniceai/api-docs/main/welcome/privacy.mdx",
+            "https://api.venice.ai/doc/api/swagger.yaml"
+        ]
     }
 }

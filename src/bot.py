@@ -4,49 +4,18 @@ import time
 import sys
 from pathlib import Path
 from discord.ext import commands
+from discord.ext import tasks
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup
-import aiohttp
-import re
-import json
+
 
 # Add parent directory to path to allow importing from config
 sys.path.append(str(Path(__file__).parent.parent))
 from src.venice_api import VeniceAPI
 from src.respond import post_response
 from src.price import get_price_data
+from src.data_feeds import DataAugmenter
 from config.config import get_server_config, update_server_config, DISCORD_TOKEN, VENICE_API_KEY
 
-
-async def scrape_venice_faq(url, cutoff_before_phrase="", cutoff_after_phrase=""):
-    """
-    Asynchronously scrape the Venice.ai FAQ page and return parsed HTML.
-    """
-    headers = {"User-Agent": "Mozilla/5.0"}
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            if response.status != 200:
-                print(f"Error: Unable to fetch page (Status Code: {response.status})")
-                return None
-
-            html = await response.text()
-            soup = BeautifulSoup(html, "html.parser")
-
-            # Find and store the desired script content before removing scripts
-            desired_script = soup.find("script", text=lambda t: t and "Frequently Asked Questions" in t)
-            if desired_script:
-                faq_content = desired_script.get_text()
-                # Assume faq_content is the string you extracted
-                # This regex finds the first JSON-like block (from the first '{' to the last '}')
-                json_match = re.search(r'({.*})', faq_content, re.DOTALL)
-
-                if json_match:
-                    json_str = json_match.group(1)
-                    cleaned_json_str = json_str.replace('\\"', '"')
-                    return cleaned_json_str
-
-            return None
 
 # Load environment variables
 load_dotenv()
@@ -66,11 +35,38 @@ def get_prefix(bot, message):
 
 bot = commands.Bot(command_prefix=get_prefix, intents=intents)
 venice_api = VeniceAPI(api_key=VENICE_API_KEY)
+data_augmenter = None  # Will be initialized when needed with server-specific settings
+
+
+@tasks.loop(minutes=30)
+async def refresh_data_timer():
+    """Background task to refresh the data augmenter every 30 minutes"""
+    global data_augmenter
+    if data_augmenter is not None:
+        try:
+            print(f"[AUTO] Refreshing DataAugmenter cache (30-minute interval)...")
+            await data_augmenter.refresh()
+            print(f"[AUTO] DataAugmenter cache refresh completed")
+        except Exception as e:
+            print(f"[AUTO] Error in scheduled refresh: {e}")
 
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
+    
+    # Initialize data_augmenter if not already initialized
+    global data_augmenter
+    if data_augmenter is None:
+        # Get server config from the first guild the bot is in (fallback)
+        if bot.guilds:
+            server_config = get_server_config(bot.guilds[0].id)
+            scrape_list = server_config.get("scrape_list", [])
+            data_augmenter = DataAugmenter(scrape_list)
+    
+    # Start the automatic refresh timer
+    refresh_data_timer.start()
+    print(f"Started automatic data refresh timer (every 30 minutes)")
 
 @bot.command(name="nick")
 async def set_nickname(ctx, new_name: str):
@@ -132,24 +128,21 @@ async def ask(ctx, *, question):
                 return
 
         # Get and validate other config values
-        faq_url = server_config.get("faq_url", "")
-        cutoff_before_phrase = server_config.get("faq_start_phrase", "")
-        cutoff_after_phrase = server_config.get("faq_end_phrase", "")
         topic = server_config.get("discord_topic", "VeniceFAQ")
         
-        # Type validation for string parameters
-        for name, value in [
-            ("faq_url", faq_url),
-            ("faq_start_phrase", cutoff_before_phrase),
-            ("faq_end_phrase", cutoff_after_phrase),
-            ("discord_topic", topic)
-        ]:
-            if not isinstance(value, str):
-                await ctx.send(f"Configuration error: {name} must be a string, got {type(value).__name__}")
-                return
+        # Type validation for topic parameter
+        if not isinstance(topic, str):
+            await ctx.send(f"Configuration error: discord_topic must be a string, got {type(topic).__name__}")
+            return
 
-        # Get live website faq
-        additional_context = await scrape_venice_faq(faq_url, cutoff_before_phrase, cutoff_after_phrase)
+        # Initialize DataAugmenter with server-specific settings if needed
+        global data_augmenter
+        if data_augmenter is None:
+            scrape_list = server_config.get("scrape_list", [])
+            data_augmenter = DataAugmenter(scrape_list)
+        
+        # Get live website faq and docs using the DataAugmenter
+        additional_context = await data_augmenter.get_data()
         
         # Get answer from Venice AI
         answer = await venice_api.get_answer(question, topic, context_file=None, raw_context=additional_context)
@@ -294,7 +287,41 @@ async def config_command(ctx, setting=None, *, value=None):
         
     # Update the configuration
     update_server_config(ctx.guild.id, {setting: value})
+    
+    # Reset data_augmenter to None to force reload with new settings on next use
+    global data_augmenter
+    if setting == "scrape_list":
+        data_augmenter = None
+    
     await ctx.send(f"Updated **{setting}** to: `{value}`")
+
+
+@bot.command(name='refresh_data')
+async def refresh_data(ctx):
+    """Refresh the cached data from all sources"""
+    if not ctx.author.guild_permissions.administrator:
+        await ctx.send("You need administrator permissions to refresh data.")
+        return
+    
+    server_config = get_server_config(ctx.guild.id)
+    scrape_list = server_config.get("scrape_list", [])
+    
+    # Initialize or get the data augmenter
+    global data_augmenter
+    if data_augmenter is None:
+        data_augmenter = DataAugmenter(scrape_list)
+    
+    await ctx.send("Refreshing data cache... This might take a moment.")
+    
+    try:
+        start_time = time.time()
+        await data_augmenter.refresh()
+        elapsed_time = time.time() - start_time
+        
+        await ctx.send(f"Data cache refreshed successfully! (Took {elapsed_time:.2f}s)")
+    except Exception as e:
+        await ctx.send(f"Error refreshing data: {str(e)}")
+        print(f"Error refreshing data: {e}")
 
 
 def run():
