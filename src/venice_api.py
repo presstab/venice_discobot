@@ -103,7 +103,7 @@ class VeniceAPI:
 
         # prepare the full message to send to the LLM
         llm_query = f"{llm_query} {user_context}"
-        message = [{"role": "user", "content": llm_query}, {"role": "system", "content": dev_msg}]
+        message = [{"role": "system", "content": dev_msg}, {"role": "user", "content": llm_query}]
 
         print("sending to llm")
         try:
@@ -130,6 +130,12 @@ class VeniceAPI:
 
                 if chunk.choices and chunk.choices[0].delta.content:
                     response_text += chunk.choices[0].delta.content
+
+                if "completion_tokens" in str(chunk):
+                    # Handle OpenAI-compatible usage stats (Venice and OpenAI)
+                    input_tokens = chunk.usage.prompt_tokens
+                    output_tokens = chunk.usage.completion_tokens
+                    print(f"input tokens:{input_tokens} output tokens:{output_tokens}")
 
             # Add complete response to messages
             # self.messages.append({"role": "assistant", "content": response_text})

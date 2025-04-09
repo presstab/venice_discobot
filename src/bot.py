@@ -36,32 +36,29 @@ def get_prefix(bot, message):
 
 bot = commands.Bot(command_prefix=get_prefix, intents=intents)
 venice_api = VeniceAPI(api_key=VENICE_API_KEY)
-data_augmenter = None  # Will be initialized when needed with server-specific settings
+data_augmenters = {}  # Dictionary to store guild-specific DataAugmenter instances
 
 
 @tasks.loop(minutes=30)
 async def refresh_data_timer():
-    """Background task to refresh the data augmenter every 30 minutes"""
-    global data_augmenter
-    if data_augmenter is not None:
-        try:
-            print(f"[AUTO] Refreshing DataAugmenter cache (30-minute interval)...")
-            await data_augmenter.refresh()
-            print(f"[AUTO] DataAugmenter cache refresh completed")
-        except Exception as e:
-            print(f"[AUTO] Error in scheduled refresh: {e}")
+    """Background task to refresh all guild-specific data augmenters every 30 minutes"""
+    global data_augmenters
+    if data_augmenters:
+        print(f"[AUTO] Refreshing {len(data_augmenters)} DataAugmenter caches (30-minute interval)...")
+        for guild_id, augmenter in list(data_augmenters.items()):  # Create a copy of items to avoid modification during iteration
+            try:
+                await augmenter.refresh()
+                print(f"[AUTO] DataAugmenter cache refresh completed for guild {guild_id}")
+            except Exception as e:
+                print(f"[AUTO] Error in scheduled refresh for guild {guild_id}: {e}")
 
 
 @bot.event
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     
-    # Initialize data_augmenter if not already initialized
-    global data_augmenter
-    if data_augmenter is None:
-        # Initialize with empty scrape list - will be populated when first needed
-        data_augmenter = DataAugmenter([])
-        print("Initialized DataAugmenter with empty scrape list")
+    # No need to initialize data_augmenters here
+    # Each guild will get its own DataAugmenter instance when needed
     
     # Start the automatic refresh timer
     refresh_data_timer.start()
@@ -134,14 +131,18 @@ async def ask(ctx, *, question):
             await ctx.send(f"Configuration error: discord_topic must be a string, got {type(topic).__name__}")
             return
 
-        # Initialize DataAugmenter with server-specific settings if needed
-        global data_augmenter
-        if data_augmenter is None:
-            scrape_list = server_config.get("scrape_list", [])
-            data_augmenter = DataAugmenter(scrape_list)
+        # Initialize or get guild-specific DataAugmenter
+        global data_augmenters
+        guild_id = ctx.guild.id
         
-        # Get live website faq and docs using the DataAugmenter
-        additional_context = await data_augmenter.get_data()
+        # Create a new DataAugmenter for this guild if it doesn't exist
+        if guild_id not in data_augmenters:
+            scrape_list = server_config.get("scrape_list", [])
+            data_augmenters[guild_id] = DataAugmenter(scrape_list, guild_id)
+            print(f"Created new DataAugmenter for guild {guild_id}")
+        
+        # Get live website faq and docs using the guild-specific DataAugmenter
+        additional_context = await data_augmenters[guild_id].get_data()
         
         # Get answer from Venice AI
         answer = await venice_api.get_answer(question, topic, context_file=None, raw_context=additional_context)
@@ -211,8 +212,27 @@ async def price_command(ctx, *, question=None):
         if question is None:
             question = "What is the current price of VVV?"
 
+        # Initialize or get guild-specific DataAugmenter to incorporate custom context
+        global data_augmenters
+        guild_id = ctx.guild.id
+        
+        # Create a new DataAugmenter for this guild if it doesn't exist
+        if guild_id not in data_augmenters:
+            scrape_list = server_config.get("scrape_list", [])
+            data_augmenters[guild_id] = DataAugmenter(scrape_list, guild_id)
+            print(f"Created new DataAugmenter for guild {guild_id} in price command")
+        
+        # Get custom context for this guild
+        try:
+            custom_data = await data_augmenters[guild_id].get_data()
+            # Combine price data with any custom context
+            combined_context = f"{price_data}\n\n{custom_data}"
+        except Exception as e:
+            print(f"Error getting custom context for price command: {e}")
+            combined_context = price_data
+
         topic = server_config.get("discord_topic", "VeniceFAQ")
-        answer = await venice_api.get_answer(question, topic, context_file=None, raw_context=price_data, additional_dev_prompt=dev_additional_prompt)
+        answer = await venice_api.get_answer(question, topic, context_file=None, raw_context=combined_context, additional_dev_prompt=dev_additional_prompt)
 
         # Calculate response time
         response_time = time.time() - start_time
@@ -291,40 +311,81 @@ async def config_command(ctx, setting=None, *, value=None):
     # Update the configuration
     update_server_config(ctx.guild.id, {setting: value})
     
-    # Reset data_augmenter to None to force reload with new settings on next use
-    global data_augmenter
-    if setting == "scrape_list":
-        data_augmenter = None
+    # Reset guild's DataAugmenter if scrape_list is changed
+    global data_augmenters
+    guild_id = ctx.guild.id
+    if setting == "scrape_list" and guild_id in data_augmenters:
+        # Remove the guild's DataAugmenter to force recreation with new settings
+        del data_augmenters[guild_id]
+        print(f"Removed DataAugmenter for guild {guild_id} due to scrape_list change")
     
     await ctx.send(f"Updated **{setting}** to: `{value}`")
 
 
-def get_custom_context():
-    """Helper function to load custom context data"""
+def get_custom_context(guild_id=None):
+    """
+    Helper function to load custom context data
+    If guild_id is provided, returns context specific to that guild
+    Otherwise returns all context data
+    """
     custom_context_path = "config/custom_context.json"
     try:
         with open(custom_context_path, "r") as f:
             data = json.load(f)
-        # Ensure the expected structure exists
-        if "context_list" not in data or not isinstance(data["context_list"], list):
-            data = {"context_list": []}
+        # Ensure the expected structure exists for guild-specific contexts
+        if not isinstance(data, dict):
+            data = {}
     except (FileNotFoundError, json.JSONDecodeError):
         # Create a new file with default structure if it doesn't exist or is invalid
-        data = {"context_list": []}
+        data = {}
     
+    # Return specific guild data if requested
+    if guild_id:
+        guild_id_str = str(guild_id)  # Convert to string for JSON key
+        if guild_id_str not in data:
+            data[guild_id_str] = {"context_list": []}
+        # Ensure context_list exists in guild data
+        if "context_list" not in data[guild_id_str] or not isinstance(data[guild_id_str]["context_list"], list):
+            data[guild_id_str]["context_list"] = []
+        return data[guild_id_str]
+    
+    # Return all data if no guild specified
     return data
 
 
-def save_custom_context(data):
-    """Helper function to save custom context data"""
+def save_custom_context(data, guild_id=None):
+    """
+    Helper function to save custom context data
+    If guild_id is provided, saves only that guild's context
+    Otherwise saves all context data
+    """
     custom_context_path = "config/custom_context.json"
-    with open(custom_context_path, "w") as f:
-        json.dump(data, f, indent=4)
+    
+    # If saving for a specific guild
+    if guild_id:
+        # Load existing data first
+        try:
+            with open(custom_context_path, "r") as f:
+                all_data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            all_data = {}
+        
+        # Update only the specified guild's data
+        guild_id_str = str(guild_id)
+        all_data[guild_id_str] = data
+        
+        # Save back the complete data
+        with open(custom_context_path, "w") as f:
+            json.dump(all_data, f, indent=4)
+    else:
+        # Save all data
+        with open(custom_context_path, "w") as f:
+            json.dump(data, f, indent=4)
 
 
 @bot.command(name='add')
 async def add_context(ctx, *, message):
-    """Add a custom context message to the bot's knowledge base"""
+    """Add a custom context message to the bot's knowledge base for this guild"""
     # Check for moderator or administrator permissions
     if not (ctx.author.guild_permissions.administrator or ctx.author.guild_permissions.moderate_members):
         await ctx.send("You need moderator or administrator permissions to add context messages.")
@@ -346,31 +407,32 @@ async def add_context(ctx, *, message):
     message = message.replace("<", "&lt;").replace(">", "&gt;")
     
     try:
-        # Read the current custom context file
-        data = get_custom_context()
+        # Read the current custom context file for this guild
+        guild_data = get_custom_context(ctx.guild.id)
         
         # Check for duplicate entries
-        if message in data["context_list"]:
+        if message in guild_data["context_list"]:
             await ctx.send("This message already exists in the context database.")
             return
         
         # Add the new message to context_list
-        data["context_list"].append(message)
+        guild_data["context_list"].append(message)
         
         # Limit total number of items to prevent file size abuse
         max_items = 100
-        if len(data["context_list"]) > max_items:
-            data["context_list"] = data["context_list"][-max_items:]  # Keep only the most recent items
+        if len(guild_data["context_list"]) > max_items:
+            guild_data["context_list"] = guild_data["context_list"][-max_items:]  # Keep only the most recent items
         
         # Write back to the file with pretty formatting
-        save_custom_context(data)
+        save_custom_context(guild_data, ctx.guild.id)
         
-        # Refresh the data augmenter to include the new context
-        global data_augmenter
-        if data_augmenter is not None:
-            await data_augmenter.refresh()
+        # Refresh the guild's data augmenter to include the new context
+        global data_augmenters
+        guild_id = ctx.guild.id
+        if guild_id in data_augmenters:
+            await data_augmenters[guild_id].refresh()
         
-        await ctx.send(f"Context message added successfully! Current context has {len(data['context_list'])} items.")
+        await ctx.send(f"Context message added successfully! Current context has {len(guild_data['context_list'])} items.")
     except Exception as e:
         await ctx.send(f"Error adding context message: {str(e)}")
         print(f"Error adding context message: {e}")
@@ -378,15 +440,16 @@ async def add_context(ctx, *, message):
 
 @bot.command(name='context')
 async def list_context(ctx, delete_index: int = None):
-    """List all custom context items or delete an item by index"""
+    """List all custom context items or delete an item by index for this guild"""
     # Check for moderator or administrator permissions for ALL context operations
     if not (ctx.author.guild_permissions.administrator or ctx.author.guild_permissions.moderate_members):
         await ctx.send("You need moderator or administrator permissions to view or manage context items.")
         return
     
     try:
-        data = get_custom_context()
-        context_list = data["context_list"]
+        # Get guild-specific context data
+        guild_data = get_custom_context(ctx.guild.id)
+        context_list = guild_data["context_list"]
         
         # Handle delete operation if index is provided
         if delete_index is not None:
@@ -398,23 +461,24 @@ async def list_context(ctx, delete_index: int = None):
                 return
             
             removed_item = context_list.pop(delete_index)
-            save_custom_context(data)
+            save_custom_context(guild_data, ctx.guild.id)
             
-            # Refresh the data augmenter to exclude the deleted context
-            global data_augmenter
-            if data_augmenter is not None:
-                await data_augmenter.refresh()
+            # Refresh the guild's data augmenter to exclude the deleted context
+            global data_augmenters
+            guild_id = ctx.guild.id
+            if guild_id in data_augmenters:
+                await data_augmenters[guild_id].refresh()
                 
             await ctx.send(f"Removed context item: \"{removed_item}\"")
             return
         
         # List all items
         if not context_list:
-            await ctx.send("No custom context items found.")
+            await ctx.send("No custom context items found for this server.")
             return
         
         # Format output with numbered list
-        response = "**Custom Context Items:**\n"
+        response = f"**Custom Context Items for {ctx.guild.name}:**\n"
         for i, item in enumerate(context_list, 1):
             # Truncate long items in the listing
             display_item = item
@@ -445,22 +509,26 @@ async def refresh_data(ctx):
     server_config = get_server_config(ctx.guild.id)
     scrape_list = server_config.get("scrape_list", [])
     
-    # Initialize or get the data augmenter
-    global data_augmenter
-    if data_augmenter is None:
-        data_augmenter = DataAugmenter(scrape_list)
+    # Initialize or get the guild-specific data augmenter
+    global data_augmenters
+    guild_id = ctx.guild.id
     
-    await ctx.send("Refreshing data cache... This might take a moment.")
+    # Create a new DataAugmenter for this guild if it doesn't exist
+    if guild_id not in data_augmenters:
+        data_augmenters[guild_id] = DataAugmenter(scrape_list, guild_id)
+        print(f"Created new DataAugmenter for guild {guild_id}")
+    
+    await ctx.send("Refreshing data cache for this server... This might take a moment.")
     
     try:
         start_time = time.time()
-        await data_augmenter.refresh()
+        await data_augmenters[guild_id].refresh()
         elapsed_time = time.time() - start_time
         
-        await ctx.send(f"Data cache refreshed successfully! (Took {elapsed_time:.2f}s)")
+        await ctx.send(f"Data cache for this server refreshed successfully! (Took {elapsed_time:.2f}s)")
     except Exception as e:
         await ctx.send(f"Error refreshing data: {str(e)}")
-        print(f"Error refreshing data: {e}")
+        print(f"Error refreshing data for guild {guild_id}: {e}")
 
 
 def run():

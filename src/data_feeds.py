@@ -19,26 +19,41 @@ async def get_url(url):
 
 
 class DataAugmenter:
-    def __init__(self, scrape_list=None):
+    def __init__(self, scrape_list=None, guild_id=None):
         self.cache = None
         self.last_update_time = None
         self.api_url = "https://venice.ai/faqs"
         self.scrap_list = scrape_list or []
+        self.guild_id = guild_id  # Store guild_id for context-specific loading
         self.custom_augment = self._load_custom_context()
-        print(f"DataAugmenter initialized with {len(self.scrap_list)} URLs and custom context: {len(self.custom_augment)} items")
+        print(f"DataAugmenter initialized for guild: {guild_id}, with {len(self.scrap_list)} URLs and custom context: {len(self.custom_augment)} items")
     
     def _load_custom_context(self):
         """
         Load custom context from JSON file
-        Returns a list of context strings
+        If guild_id is set, only returns context for that guild
+        Otherwise returns empty list
         """
+        if self.guild_id is None:
+            print("No guild_id provided to DataAugmenter, no custom context will be loaded")
+            return []
+            
         try:
             with open("config/custom_context.json", "r") as f:
                 data = json.load(f)
-                # Extract the context_list from the new format
-                if "context_list" in data and isinstance(data["context_list"], list):
+                
+                # Check if we have the new guild-specific format
+                if isinstance(data, dict):
+                    guild_id_str = str(self.guild_id)
+                    if guild_id_str in data and "context_list" in data[guild_id_str]:
+                        if isinstance(data[guild_id_str]["context_list"], list):
+                            return data[guild_id_str]["context_list"]
+                
+                # Old format compatibility - only if guild_id matches or no guild_id was specified
+                elif "context_list" in data and isinstance(data["context_list"], list):
                     return data["context_list"]
-                # Fallback for backward compatibility
+                
+                # No context found for this guild
                 return []
         except (FileNotFoundError, json.JSONDecodeError):
             # Return empty list if file doesn't exist or is invalid
@@ -58,13 +73,14 @@ class DataAugmenter:
         """
         Force refresh the cached data.
         """
-        print("Refreshing DataAugmenter cache...")
+        guild_info = f"for guild {self.guild_id}" if self.guild_id else ""
+        print(f"Refreshing DataAugmenter cache {guild_info}...")
         start_time = time.time()
         self.custom_augment = self._load_custom_context()  # Reload custom context
         self.cache = await self._fetch_all_data()
         self.last_update_time = datetime.now()
         elapsed = time.time() - start_time
-        print(f"DataAugmenter cache refreshed in {elapsed:.2f}s")
+        print(f"DataAugmenter cache refreshed {guild_info} in {elapsed:.2f}s")
         return self.cache
     
     async def get_data(self, max_age_seconds=3600):
