@@ -16,8 +16,8 @@ async def post_response(ctx, question, llm_response, bot, server_config, respons
     MAX_LENGTH = 1024
     answer = llm_response['answer']
     truncated_answer = (answer[:MAX_LENGTH - 3] + "...") if len(answer) > MAX_LENGTH else answer
-    if len(answer) > MAX_LENGTH:
-        print(answer)
+    # if len(answer) > MAX_LENGTH:
+    #     print(answer)
 
     if server_config['answer_style'] != "embedded":
         return await ctx.send(truncated_answer)

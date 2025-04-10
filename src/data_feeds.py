@@ -122,7 +122,7 @@ class DataAugmenter:
         
         # Add custom context if available
         if self.custom_augment and isinstance(self.custom_augment, list):
-            custom_text = "\n\nCUSTOM CONTEXT:\n"
+            custom_text = "\n\nIMPORTANT CUSTOM CONTEXT:\n"
             for item in self.custom_augment:
                 custom_text += f"- {item}\n"
             augmented_text += custom_text
@@ -132,10 +132,7 @@ class DataAugmenter:
         print(f"All data fetched in {total_time:.2f}s")
         return augmented_text
 
-    async def scrape_venice_faq(self):
-        """
-        Asynchronously scrape the Venice.ai FAQ page and return parsed HTML.
-        """
+    async def _scrape(self):
         html = await get_url(self.api_url)
         soup = BeautifulSoup(html, "html.parser")
 
@@ -149,10 +146,79 @@ class DataAugmenter:
 
             if json_match:
                 json_str = json_match.group(1)
-                cleaned_json_str = json_str.replace('\\"', '"')
-                return cleaned_json_str
+                faq_data = json_str.replace('\\"', '"')
+                return faq_data
 
-        return ""
+    async def scrape_venice_faq(self):
+        """
+        Asynchronously scrape the Venice.ai FAQ page and return parsed HTML.
+        """
+        faq_data = await self._scrape()
+
+        faq_data = faq_data.replace('\\\"', '\"')
+        # Add this to your function to debug the JSON parsing error
+        faq_data_dict = json.loads(faq_data)
+
+        def flatten_text_fields(obj):
+            if isinstance(obj, dict):
+                return {k: flatten_text_fields(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                if all(isinstance(i, str) for i in obj):
+                    return ' '.join(obj)
+                return [flatten_text_fields(i) for i in obj]
+            else:
+                return obj
+
+        flattened = flatten_text_fields(faq_data_dict)
+
+        result = ""
+        if "faqItems" not in flattened:
+            return ""
+
+        for faqItem in flattened['faqItems']:
+            question = faqItem.get("question")
+            if not question:
+                print(f"*** no question: {faqItem}")
+            if question:
+                result += f"\nQuestion: {question} Answer: "
+                for item in faqItem["answer"]["json"]["content"]:
+                    if "content" in item:
+                        content_list = item["content"]
+                        for c in content_list:
+                            if "text" in c:
+                                result += f" {c['text']}"
+                            elif "type" in c and c["type"] == "listItem":
+                                list_items = c["content"]
+                                for list_item in list_items:
+                                    if "content" in list_item:
+                                        for c2 in list_item["content"]:
+                                            if "text" in c2:
+                                                result += f" {c2['text']}"
+
+        if "faqCategories" not in flattened:
+            return result
+        
+        for category in flattened['faqCategories']:
+            if "questions" in category:
+                items = category["questions"]["items"]
+                for item in items:
+                    if "question" in item:
+                        result += f"\nQuestion: {item['question']} Answer: "
+                        for it in item["answer"]["json"]["content"]:
+                            if "content" in it:
+                                content_list = it["content"]
+                                for c in content_list:
+                                    if "text" in c:
+                                        result += f" {c['text']}"
+                                    elif "type" in c and c["type"] == "listItem":
+                                        list_items = c["content"]
+                                        for list_item in list_items:
+                                            if "content" in list_item:
+                                                for c2 in list_item["content"]:
+                                                    if "text" in c2:
+                                                        result += f" {c2['text']}"
+
+        return result
 
     async def scrape_api_docs(self):
         augment_text = ""

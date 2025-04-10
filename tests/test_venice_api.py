@@ -7,11 +7,13 @@ from bs4 import BeautifulSoup
 import aiohttp
 import re
 import json
+from pprint import pprint
 
 # Add parent directory to path so we can import the src module
 sys.path.append(str(Path(__file__).parent.parent))
 from src.venice_api import VeniceAPI
 from src.price import get_price_data
+from src.data_feeds import DataAugmenter
 
 async def scrape_venice_faq(url, cutoff_before_phrase="", cutoff_after_phrase=""):
     """
@@ -171,5 +173,133 @@ async def test_venice_api():
     print("Test completed successfully!")
 
 
+async def test_data_augmenter():
+    """
+    Test the DataAugmenter class with FAQ scraping functionality
+    """
+    print("\n===== Testing DataAugmenter =====")
+    
+    # Create a test guild ID
+    test_guild_id = "123456789"
+    
+    # Create a DataAugmenter instance with a test guild ID
+    # Use an empty scrape list to focus on FAQ scraping
+    data_augmenter = DataAugmenter([], test_guild_id)
+    
+    # Set the API URL to the Venice FAQ page
+    data_augmenter.api_url = "https://venice.ai/faqs"
+    
+    # Test scraping the Venice FAQ page
+    print("Scraping Venice FAQ page...")
+    faq_data = await data_augmenter.scrape_venice_faq()
+    
+    # Verify that we got a non-empty response
+    assert faq_data, "No data was returned from scraping the FAQ"
+    assert len(faq_data) > 100, f"FAQ data seems too short: {len(faq_data)} characters"
+    print(faq_data)
+
+    # Test the full data fetch process
+    print("\nTesting full data augmentation process...")
+    all_data = await data_augmenter.get_data()
+    
+    # Verify that we got a non-empty response
+    assert all_data, "No data was returned from the data augmenter"
+    assert len(all_data) > 100, f"Augmented data seems too short: {len(all_data)} characters"
+    
+    print(f"Successfully fetched augmented data: {len(all_data)} characters")
+    
+    # Test the refresh functionality
+    print("\nTesting refresh functionality...")
+    refreshed_data = await data_augmenter.refresh()
+    
+    # Verify that we got a non-empty response
+    assert refreshed_data, "No data was returned after refresh"
+    assert len(refreshed_data) > 100, f"Refreshed data seems too short: {len(refreshed_data)} characters"
+    
+    print(f"Successfully refreshed data: {len(refreshed_data)} characters")
+    print("DataAugmenter test completed successfully!")
+
+async def test_guild_specific_context():
+    """
+    Test the guild-specific context functionality in DataAugmenter
+    """
+    print("\n===== Testing Guild-Specific Context =====")
+    
+    # Create two test guild IDs to verify isolation
+    guild_id_1 = "111111111"
+    guild_id_2 = "222222222"
+    
+    # Create a temporary custom_context.json file for testing
+    temp_context = {
+        guild_id_1: {
+            "context_list": [
+                "Guild 1 context item 1",
+                "Guild 1 context item 2"
+            ]
+        },
+        guild_id_2: {
+            "context_list": [
+                "Guild 2 context item 1",
+                "Guild 2 context item 2",
+                "Guild 2 context item 3"
+            ]
+        }
+    }
+    
+    # Save the temporary context to a file
+    os.makedirs("config", exist_ok=True)
+    with open("config/custom_context.json", "w") as f:
+        json.dump(temp_context, f, indent=4)
+    
+    try:
+        # Create DataAugmenter instances for each test guild
+        print("Creating DataAugmenter instances for two test guilds...")
+        augmenter_1 = DataAugmenter([], guild_id_1)
+        augmenter_2 = DataAugmenter([], guild_id_2)
+        
+        # Verify that each augmenter only loads its own guild's context
+        print("Checking context isolation between guilds...")
+        
+        # Check first guild's context
+        custom_context_1 = augmenter_1.custom_augment
+        assert len(custom_context_1) == 2, f"Expected 2 context items for guild 1, got {len(custom_context_1)}"
+        assert "Guild 1 context item 1" in custom_context_1, "Missing expected context item for guild 1"
+        assert "Guild 2 context item 1" not in custom_context_1, "Guild 1 contains context from guild 2"
+        
+        # Check second guild's context
+        custom_context_2 = augmenter_2.custom_augment
+        assert len(custom_context_2) == 3, f"Expected 3 context items for guild 2, got {len(custom_context_2)}"
+        assert "Guild 2 context item 1" in custom_context_2, "Missing expected context item for guild 2"
+        assert "Guild 1 context item 1" not in custom_context_2, "Guild 2 contains context from guild 1"
+        
+        print("Guild context isolation verified successfully")
+        
+        # Test that context is included in the augmented data
+        print("Testing context inclusion in augmented data...")
+        
+        # Get augmented data for guild 1
+        data_1 = await augmenter_1.get_data()
+        assert "Guild 1 context item 1" in data_1, "Guild 1 context not included in augmented data"
+        assert "Guild 2 context item 1" not in data_1, "Guild 2 context incorrectly included in guild 1 data"
+        
+        print("Guild-specific context test completed successfully!")
+        
+    finally:
+        # Clean up the temporary test file
+        try:
+            os.remove("config/custom_context.json")
+            print("Cleaned up temporary test file")
+        except:
+            pass
+
+
 if __name__ == "__main__":
-    asyncio.run(scrape_api_docs())
+    # Choose which test to run by uncommenting one of these lines
+    # asyncio.run(scrape_api_docs())
+    # asyncio.run(test_venice_api())
+    # asyncio.run(test_price())
+    # asyncio.run(test_data_augmenter())
+    
+    # Run both DataAugmenter tests
+    asyncio.run(test_data_augmenter())
+    asyncio.run(test_guild_specific_context())
